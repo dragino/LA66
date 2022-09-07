@@ -265,6 +265,15 @@ void uart_log_init(uint32_t baudrate)
 
 void board_init()
 {
+		rcc_enable_oscillator(RCC_OSC_RCO32K, true);
+		rcc_set_iwdg_clk_source(RCC_IWDG_CLK_SOURCE_RCO32K);
+		rcc_enable_peripheral_clk(RCC_PERIPHERAL_IWDG, true);
+    delay_ms(100);	  
+    iwdg_init(true);
+
+    iwdg_set_prescaler(IWDG_PRESCALER_256);
+    iwdg_set_reload(0xFFF); 
+    iwdg_start();	
     rcc_enable_oscillator(RCC_OSC_XO32K, true);
 
     rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOA, true);
@@ -283,7 +292,6 @@ void board_init()
     #endif
 
     delay_ms(100);
-    pwr_xo32k_lpm_cmd(true);
 
 	  int rst_src = 0;
 	
@@ -339,14 +347,6 @@ int main(void)
 	  linkwan_at_init();
 	
 		BSP_sensor_Init();
-		
-		rcc_enable_peripheral_clk(RCC_PERIPHERAL_IWDG, true);
-		
-    iwdg_init(true);
-
-    iwdg_set_prescaler(IWDG_PRESCALER_256);
-    iwdg_set_reload(0xFFF); 
-    iwdg_start();
 		
 		StartIWDGRefresh(TX_ON_EVENT);		
 		
@@ -1153,7 +1153,10 @@ void OnNetworkJoinedLedEvent(void)
 
 static void OnDownlinkDetectTimeoutEvent( void )
 {
-	rejoin_status=1;
+	if((lora_config_otaa_get() == LORA_ENABLE ? 1 : 0))
+	{
+		rejoin_status=1;
+	}
 	
   /*Wait for next tx slot*/
   TimerStop( &DownlinkDetectTimeoutTimer);

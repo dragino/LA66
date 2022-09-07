@@ -324,7 +324,9 @@ int8_t RegionCommonComputeTxPower( int8_t txPowerIndex, float maxEirp, float ant
 			case 47:phyTxPower=17;break;
 			case 48:phyTxPower=18;break;
 			case 49:phyTxPower=19;break;	
-			case 50:phyTxPower=20;break;			
+			case 50:phyTxPower=20;break;		
+			case 51:phyTxPower=21;break;
+      case 52:phyTxPower=22;break;				
 			default:
 					phyTxPower = ( int8_t )floor( ( maxEirp - ( txPowerIndex * 2U ) ) - antennaGain );
 				  break;

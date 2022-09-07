@@ -3337,7 +3337,7 @@ LoRaMacStatus_t LoRaMacMibSetRequestConfirm( MibRequestConfirm_t *mibSet )
             {
                 LoRaMacParams.ChannelsTxPower = verify.TxPower;
             }
-						else if((verify.TxPower>=40)&&(verify.TxPower<=50))
+						else if((verify.TxPower>=40)&&(verify.TxPower<=52))
 						{
 							 LoRaMacParams.ChannelsTxPower = verify.TxPower;
 						}

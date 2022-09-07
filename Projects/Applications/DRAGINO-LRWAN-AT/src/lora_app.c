@@ -102,10 +102,6 @@ extern uint8_t LinkADR_NbTrans_uplink_counter_retransmission_increment_switch;
 extern uint8_t LinkADR_NbTrans_retransmission_nbtrials;
 extern uint16_t unconfirmed_uplink_change_to_confirmed_uplink_timeout;
 
-uint32_t uuid1_in_sflash,uuid2_in_sflash;
-
-uint8_t device_UUID_error_status=0;
-
 extern bool print_isdone(void);
 
 uint8_t lora_packet_send_complete_status=0;
@@ -420,12 +416,7 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
 	
 	Flash_read_key();
 	Flash_Read_Config();
-	
-	if(UID_COMP()==0)
-	{
-		device_UUID_error_status=1;
-		LOG_PRINTF(LL_DEBUG,"Invalid credentials,the device goes into low power mode\r\n");
-	}
+
 	#if defined( LA66_HARDWARE_TEST )	
 	LOG_PRINTF(LL_DEBUG,"\n\rLA66 Hardware test\n\r");
 	LOG_PRINTF(LL_DEBUG,"Image Version: "AT_VERSION_STRING"\n\r");
@@ -629,6 +620,10 @@ void region_printf(void)
 	LOG_PRINTF(LL_DEBUG,"AS923-3\n\r");
 	current_fre_band=15;
   band_string="AS923-3";	
+	#elif defined( AS923_4 )
+	LOG_PRINTF(LL_DEBUG,"AS923-4\n\r");
+	current_fre_band=16;
+  band_string="AS923-4";	
 	#else
   LOG_PRINTF(LL_DEBUG,"AS923\n\r");
 	current_fre_band=2;
@@ -690,47 +685,44 @@ void key_printf(void)
 
 void LORA_Join( void)
 {
-	if(device_UUID_error_status==0)
+  if (lora_config.otaa == LORA_ENABLE)
 	{
-		if (lora_config.otaa == LORA_ENABLE)
-		{
-			MlmeReq_t mlmeReq;
+		MlmeReq_t mlmeReq;
 		
-			mlmeReq.Type = MLME_JOIN;
-			mlmeReq.Req.Join.DevEui = lora_config.DevEui;
-			mlmeReq.Req.Join.AppEui = lora_config.AppEui;
-			mlmeReq.Req.Join.AppKey = lora_config.AppKey;
-			mlmeReq.Req.Join.NbTrials = LoRaParamInit->NbTrials;
+		mlmeReq.Type = MLME_JOIN;
+		mlmeReq.Req.Join.DevEui = lora_config.DevEui;
+		mlmeReq.Req.Join.AppEui = lora_config.AppEui;
+		mlmeReq.Req.Join.AppKey = lora_config.AppKey;
+		mlmeReq.Req.Join.NbTrials = LoRaParamInit->NbTrials;
 		
-			JoinParameters = mlmeReq.Req.Join;
+		JoinParameters = mlmeReq.Req.Join;
 
-			LoRaMacMlmeRequest( &mlmeReq );
-		}
-		else
-		{
-			mibReq.Type = MIB_NET_ID;
-			mibReq.Param.NetID = LORAWAN_NETWORK_ID;
-			LoRaMacMibSetRequestConfirm( &mibReq );
+		LoRaMacMlmeRequest( &mlmeReq );
+	}
+	else
+	{
+		mibReq.Type = MIB_NET_ID;
+		mibReq.Param.NetID = LORAWAN_NETWORK_ID;
+		LoRaMacMibSetRequestConfirm( &mibReq );
 
-			mibReq.Type = MIB_DEV_ADDR;
-			mibReq.Param.DevAddr = lora_config.DevAddr;
-			LoRaMacMibSetRequestConfirm( &mibReq );
+		mibReq.Type = MIB_DEV_ADDR;
+		mibReq.Param.DevAddr = lora_config.DevAddr;
+		LoRaMacMibSetRequestConfirm( &mibReq );
 
-			mibReq.Type = MIB_NWK_SKEY;
-			mibReq.Param.NwkSKey = lora_config.NwkSKey;
-			LoRaMacMibSetRequestConfirm( &mibReq );
+		mibReq.Type = MIB_NWK_SKEY;
+		mibReq.Param.NwkSKey = lora_config.NwkSKey;
+		LoRaMacMibSetRequestConfirm( &mibReq );
 
-			mibReq.Type = MIB_APP_SKEY;
-			mibReq.Param.AppSKey = lora_config.AppSKey;
-			LoRaMacMibSetRequestConfirm( &mibReq );
+		mibReq.Type = MIB_APP_SKEY;
+		mibReq.Param.AppSKey = lora_config.AppSKey;
+		LoRaMacMibSetRequestConfirm( &mibReq );
 
-			mibReq.Type = MIB_NETWORK_JOINED;
-			mibReq.Param.IsNetworkJoined = true;
-			LoRaMacMibSetRequestConfirm( &mibReq );
+		mibReq.Type = MIB_NETWORK_JOINED;
+		mibReq.Param.IsNetworkJoined = true;
+		LoRaMacMibSetRequestConfirm( &mibReq );
 
-			LoRaMainCallbacks->LORA_HasJoined();
-		}
-  }
+		LoRaMainCallbacks->LORA_HasJoined();
+	}
 }
 
 LoraFlagStatus LORA_JoinStatus( void)
@@ -1044,16 +1036,6 @@ void Flash_store_key(void)
     {
       store_key_in_flash[i]=lora_config.AppSKey[j];
     }        
-    
-    store_key_in_flash[68]=(uuid1_in_sflash>>24)&0xFF;
-    store_key_in_flash[69]=(uuid1_in_sflash>>16)&0xFF;
-    store_key_in_flash[70]=(uuid1_in_sflash>>8)&0xFF;
-    store_key_in_flash[71]=uuid1_in_sflash&0xFF;
-
-    store_key_in_flash[72]=(uuid2_in_sflash>>24)&0xFF;
-    store_key_in_flash[73]=(uuid2_in_sflash>>16)&0xFF;
-    store_key_in_flash[74]=(uuid2_in_sflash>>8)&0xFF;
-    store_key_in_flash[75]=uuid2_in_sflash&0xFF;
 		
 		flash_erase_page(FLASH_USER_START_ADDR_KEY);
 		if(flash_program_bytes(FLASH_USER_START_ADDR_KEY,store_key_in_flash,128)==ERRNO_FLASH_SEC_ERROR)
@@ -1099,9 +1081,6 @@ void Flash_read_key(void)
     {
       lora_config.AppSKey[j]=read_key_in_flash[i];
     }    
-    
-    uuid1_in_sflash=read_key_in_flash[68]<<24|read_key_in_flash[69]<<16|read_key_in_flash[70]<<8|read_key_in_flash[71];
-    uuid2_in_sflash=read_key_in_flash[72]<<24|read_key_in_flash[73]<<16|read_key_in_flash[74]<<8|read_key_in_flash[75];
 }
 
 void Flash_Store_Config(void)
@@ -1468,22 +1447,6 @@ uint8_t Uplink_data_adaptive_rate(lora_AppData_t* AppData)
 {
 	LoRaMacTxInfo_t txInfo;
 	if( LoRaMacQueryTxPossible( AppData->BuffSize, &txInfo ) != LORAMAC_STATUS_OK )
-	{
-		return 0;
-	}
-	else
-		return 1;
-}
-
-uint8_t UID_COMP(void)
-{
-	uint32_t unique_id[2];
-	system_get_chip_id(unique_id);
-	
-	unique_id[0]=unique_id[0]^unique_id[1];
-	unique_id[1]=unique_id[0]&unique_id[1];
-	
-	if(unique_id[0]!=uuid1_in_sflash||unique_id[1]!=uuid2_in_sflash)
 	{
 		return 0;
 	}

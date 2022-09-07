@@ -367,7 +367,6 @@ void lora_config_appskey_set(uint8_t appskey[16]);
 void lora_config_nwkskey_get(uint8_t *nwkskey);
 void lora_config_nwkskey_set(uint8_t nwkskey[16]);
 void LoRa_Join(void);
-uint8_t UID_COMP(void);
 uint8_t AT_data_send(uint8_t confirm, uint8_t port, uint8_t *payload, uint8_t len);
 
 #ifdef __cplusplus

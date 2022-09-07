@@ -95,8 +95,6 @@ extern uint8_t LinkADR_NbTrans_uplink_counter_retransmission_increment_switch;
 extern uint8_t LinkADR_NbTrans_retransmission_nbtrials;
 extern uint16_t unconfirmed_uplink_change_to_confirmed_uplink_timeout;
 
-extern uint32_t uuid1_in_sflash,uuid2_in_sflash;
-
 uint8_t write_key_in_flash_status=0,write_config_in_flash_status=0;
 
 typedef struct {
@@ -162,7 +160,6 @@ static int at_syncmod_func(int opt, int argc, char *argv[]);
 static int at_synctdc_func(int opt, int argc, char *argv[]);
 static int at_downlink_detect_func(int opt, int argc, char *argv[]);
 static int at_setmaxnbtrans_func(int opt, int argc, char *argv[]);
-static int at_uuid_func(int opt, int argc, char *argv[]);
 static int at_devicetimereq_func(int opt, int argc, char *argv[]);
 static int at_chsignaldetect_func(int opt, int argc, char *argv[]);
 
@@ -228,7 +225,6 @@ static at_cmd_t g_at_table[] = {
 		{AT_SYNCTDC, at_synctdc_func},
 		{AT_DDETECT, at_downlink_detect_func},
 		{AT_SETMAXNBTRANS, at_setmaxnbtrans_func},
-		{AT_UUID, at_uuid_func},
 		{AT_DEVICETIMEREQ,at_devicetimereq_func},
 		{AT_CHSIGNALDETECT,at_chsignaldetect_func},
 		#ifdef LA66_HARDWARE_TEST
@@ -789,7 +785,7 @@ static int at_txp_func(int opt, int argc, char *argv[])
             if(argc < 1) break;
             
             power = strtol((const char *)argv[0], NULL, 0);
-            if(power<16)
+            if((power<16)||((power>=40)&&(power<=52)))
             {
 								MibRequestConfirm_t mib;								
 							  LoRaMacStatus_t status;
@@ -2830,68 +2826,6 @@ static int at_setmaxnbtrans_func(int opt, int argc, char *argv[])
 					snprintf((char *)atcmd, ATCMD_SIZE, "Get or set the max nbtrans in LinkADR\r\n");
 					break;
 				}
-        default: break;
-    }
-
-    return ret;
-}
-
-static int at_uuid_func(int opt, int argc, char *argv[])
-{
-    int ret = LWAN_PARAM_ERROR;
-    
-    uint8_t buf[8];
-    
-    switch(opt) {
-                 
-        case QUERY_CMD: {
-            ret = LWAN_SUCCESS;
-            
-            uint32_t unique_id[2];
-            system_get_chip_id(unique_id);
-            
-            snprintf((char *)atcmd, ATCMD_SIZE, "%08X%08X\r\n", (unsigned int)unique_id[0],(unsigned int)unique_id[1]);
-            
-					  break;
-        }
-                
-        case SET_CMD: {
-            if(argc < 1) break;
-            
-            uint8_t length = hex2bin((const char *)argv[0], buf, 8);
-            if (length == 8) {                                    
-                    uuid1_in_sflash=buf[0]<<24|buf[1]<<16|buf[2]<<8|buf[3];
-                    uuid2_in_sflash=buf[4]<<24|buf[5]<<16|buf[6]<<8|buf[7];
-                    
-                    atcmd[0] = '\0';
-                    ret = LWAN_SUCCESS; 
-                    write_key_in_flash_status=1;							
-            }
-            else if(length==6)
-            {
-                if(buf[0]==0x66&&buf[1]==0x66&&buf[2]==0x66&&buf[3]==0x66&&buf[4]==0x66&&buf[5]==0x66)
-                {
-                    uint32_t id[2];
-                    system_get_chip_id(id);
-                    uuid1_in_sflash=id[0]^id[1];
-                    uuid2_in_sflash=uuid1_in_sflash&id[1];
-                    atcmd[0] = '\0';
-                    ret = LWAN_SUCCESS;
-									  write_key_in_flash_status=1;
-                }
-            }
-						else 
-              ret = LWAN_PARAM_ERROR;
-						
-            break;
-        }
-				
-				case DESC_CMD: {
-            ret = LWAN_SUCCESS;
-            snprintf((char *)atcmd, ATCMD_SIZE, "Get the device Unique ID\r\n");
-            break;
-        }
-								
         default: break;
     }
 
