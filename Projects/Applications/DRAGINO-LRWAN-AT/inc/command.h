@@ -61,6 +61,9 @@
 #define AT_PORT       "+PORT"
 #define AT_CHS        "+CHS"
 #define AT_CHE        "+CHE"
+#define AT_RX1WTO     "+RX1WTO"
+#define AT_RX2WTO     "+RX2WTO"
+#define AT_DECRYPT    "+DECRYPT"
 #define AT_SLEEP      "+SLEEP"
 #define AT_CFG        "+CFG"
 #define AT_BAT        "+BAT"
@@ -74,6 +77,8 @@
 #define AT_SYNCTDC    "+SYNCTDC"
 #define AT_DDETECT    "+DDETECT"
 #define AT_SETMAXNBTRANS    "+SETMAXNBTRANS"
+#define AT_DISFCNTCHECK 		"+DISFCNTCHECK"
+#define AT_DISMACANS 	   	  "+DISMACANS"
 #define AT_DEVICETIMEREQ  "+DEVICETIMEREQ"
 #define AT_CHSIGNALDETECT "+GETCHANSTAT"
 

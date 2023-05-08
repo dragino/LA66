@@ -27,12 +27,11 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include "LoRaMac.h"
 #include "region/Region.h"
 #include "LoRaMacCrypto.h"
-
+#include "lora_app.h"
 #include "LoRaMacTest.h"
 #include "log.h" 
 #include "lora_config.h"
 #include "tremo_gpio.h"
-
 #include "tremo_iwdg.h"
 bool jr_flag=0;
 uint8_t jr_nb=0;
@@ -46,6 +45,8 @@ extern uint8_t symbtime1_value;
 extern uint8_t flag1;
 extern uint8_t symbtime2_value;
 extern uint8_t flag2;
+extern bool down_check;
+extern bool mac_response_flag;
 extern bool debug_flags;
 extern bool rejoin_status;
 extern bool MAC_COMMAND_ANS_status;
@@ -849,11 +850,28 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
                 // Size of the regular payload is 12. Plus 1 byte MHDR and 4 bytes MIC
                 applyCFList.Size = size - 17;
 
-                RegionApplyCFList( LoRaMacRegion, &applyCFList );
+								#if defined( REGION_US915 )	|| defined( REGION_AU915 ) || defined( REGION_CN470 )
+								if(customize_set8channel_get()==0)
+							  {							
+									RegionApplyCFList( LoRaMacRegion, &applyCFList );                    
+                }
+								#else
+								if(customize_freq1_get()==0)
+								{								
+									RegionApplyCFList( LoRaMacRegion, &applyCFList );
+								}									
+								#endif
 
                 MlmeConfirm.Status = LORAMAC_EVENT_INFO_STATUS_OK;
                 IsLoRaMacNetworkJoined = true;
-                LoRaMacParams.ChannelsDatarate = LoRaMacParamsDefaults.ChannelsDatarate;
+								if(AdrCtrlOn == true)
+								{								
+									LoRaMacParams.ChannelsDatarate = LoRaMacParamsDefaults.ChannelsDatarate;
+								}
+								else
+								{
+									LoRaMacParams.ChannelsDatarate = lora_config_tx_datarate_get() ;
+								}
             }
             else
             {
@@ -943,6 +961,13 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
                     {
                         isMicOk = true;
                     }
+										else
+										{
+											if(down_check==1)
+											{
+												DownLinkCounter = 0;
+											}
+										}										
                 }
                 else
                 {
@@ -954,19 +979,28 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
                         isMicOk = true;
                         downLinkCounter = downLinkCounterTmp;
                     }
+										else
+										{
+											if(down_check==1)
+											{
+												DownLinkCounter = 0;
+											}
+										}										
                 }
 
-                // Check for a the maximum allowed counter difference
-                getPhy.Attribute = PHY_MAX_FCNT_GAP;
-                phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
-                if( sequenceCounterDiff >= phyParam.Value )
-                {
-                    McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_DOWNLINK_TOO_MANY_FRAMES_LOSS;
-                    McpsIndication.DownLinkCounter = downLinkCounter;
-                    PrepareRxDoneAbort( );
-									  address_flags=1;
-                    return;
-                }
+								if(down_check==0)
+								{
+									// Check for a the maximum allowed counter difference
+									getPhy.Attribute = PHY_MAX_FCNT_GAP;
+									phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+									if( sequenceCounterDiff >= phyParam.Value )
+									{
+											McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_DOWNLINK_TOO_MANY_FRAMES_LOSS;
+											McpsIndication.DownLinkCounter = downLinkCounter;
+											PrepareRxDoneAbort( );
+											return;
+									}
+								}
 
                 if( isMicOk == true )
                 {
@@ -2060,7 +2094,14 @@ static void ProcessMacCommands( uint8_t *payload, uint8_t macIndex, uint8_t comm
                     chParam.Rx1Frequency = 0;
                     chParam.DrRange.Value = payload[macIndex++];
 
-                    status = RegionNewChannelReq( LoRaMacRegion, &newChannelReq );
+									  if(customize_freq1_get()==0)
+										{
+											status = RegionNewChannelReq( LoRaMacRegion, &newChannelReq );
+										}
+										else
+										{
+											status = 0x03;
+										}
 
                     AddMacCommand( MOTE_MAC_NEW_CHANNEL_ANS, status, 0 );
                 }
@@ -2885,7 +2926,16 @@ LoRaMacStatus_t LoRaMacQueryTxPossible( uint8_t size, LoRaMacTxInfo_t* txInfo )
     // Verify if the fOpts and the payload fit into the maximum payload
     if( ValidatePayloadLength( size, datarate, fOptLen ) == false )
     {
+			if(mac_response_flag==1)
+			{
+        fOptLen = 0;
+        MacCommandsBufferIndex = 0;
+        MacCommandsBufferToRepeatIndex = 0;				
+			}
+			else
+			{
         return LORAMAC_STATUS_LENGTH_ERROR;
+			}
     }
     return LORAMAC_STATUS_OK;
 }

@@ -62,7 +62,7 @@ uint8_t response_level=0;
 bool is_there_data=0;
 bool rejoin_status=0;
 bool rejoin_keep_status=0;
-
+bool mac_response_flag=0;
 bool is_time_to_rejoin=0;
 bool JoinReq_NbTrails_over=0;
 bool unconfirmed_downlink_data_ans_status=0,confirmed_downlink_data_ans_status=0;
@@ -464,50 +464,51 @@ int main(void)
 		{
 			system_reset();
 		}
+		
 		#ifdef REGION_US915
-		if(MAC_COMMAND_ANS_status==1)
+		if((MAC_COMMAND_ANS_status==1)&&(mac_response_flag==0))
 		{		
-				if((( LoRaMacState & 0x00000001 ) != 0x00000001)&&(( LoRaMacState & 0x00000010 ) != 0x00000010))
+			if((( LoRaMacState & 0x00000001 ) != 0x00000001)&&(( LoRaMacState & 0x00000010 ) != 0x00000010))
+			{
+				LoRaMacState_error_times=0;          
+				MibRequestConfirm_t mib;
+						
+				mib.Type=MIB_CHANNELS_DATARATE;
+				LoRaMacMibGetRequestConfirm(&mib);										
+								
+				if(mib.Param.ChannelsDatarate==0)
 				{
-          LoRaMacState_error_times=0;          
-					MibRequestConfirm_t mib;
-			
-			    mib.Type=MIB_CHANNELS_DATARATE;
-			    LoRaMacMibGetRequestConfirm(&mib);										
-					
-				  if(mib.Param.ChannelsDatarate==0)
-			    {
-						MAC_COMMAND_ANS_status=0;
-						AppData.Buff[0]=0x00;
-						AppData.BuffSize=1;
-	          AppData.Port = 4;
-	          LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);
-				  }
-				}		  
+					MAC_COMMAND_ANS_status=0;
+					AppData.Buff[0]=0x00;
+					AppData.BuffSize=1;
+					AppData.Port = 4;
+					LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);
+				}
+			 }		  
 		}
 		#elif defined( REGION_AS923 )	|| defined( REGION_AU915 )		
-		if((MAC_COMMAND_ANS_status==1)&&(dwelltime==1))
+		if((MAC_COMMAND_ANS_status==1)&&(dwelltime==1)&&(mac_response_flag==0))
 		{		
 			if((( LoRaMacState & 0x00000001 ) != 0x00000001)&&(( LoRaMacState & 0x00000010 ) != 0x00000010))
 			{ 
-		    LoRaMacState_error_times=0;
-				MibRequestConfirm_t mib;
-		
-				mib.Type=MIB_CHANNELS_DATARATE;
-				LoRaMacMibGetRequestConfirm(&mib);
-				
-				MAC_COMMAND_ANS_status=0;
-				
-				if(mib.Param.ChannelsDatarate==2)
-				{
-					AppData.Buff[0]=0x00;
-					AppData.BuffSize=1;
-					AppData.Port = 4;							
-					LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);					
-				}
-			}		  
+				 LoRaMacState_error_times=0;
+				 MibRequestConfirm_t mib;
+					
+				 mib.Type=MIB_CHANNELS_DATARATE;
+				 LoRaMacMibGetRequestConfirm(&mib);
+							
+				 MAC_COMMAND_ANS_status=0;
+							
+				 if(mib.Param.ChannelsDatarate==2)
+				 {
+						AppData.Buff[0]=0x00;
+						AppData.BuffSize=1;
+						AppData.Port = 4;							
+						LORA_send( &AppData, LORAWAN_UNCONFIRMED_MSG);					
+				 }
+			 }		  
 		}
-		#endif
+		#endif	
 		
 		if((MAC_COMMAND_ANS_status==1 && response_level==3) 
 		|| (unconfirmed_downlink_data_ans_status==1 && response_level==1 && is_there_data==1 ) 
@@ -782,6 +783,11 @@ static void LORA_RxData( lora_AppData_t *AppData )
 						response_level=( AppData->Buff[1] );//0~4					//---->AT+RPL
 						downlink_config_store_in_flash=1;							
 					}
+					else if( (AppData->BuffSize == 3) && (AppData->Buff[1]==0x00) && (AppData->Buff[2]<=1))  //---->AT+DISMACANS
+					{
+						mac_response_flag=AppData->Buff[2];
+						downlink_config_store_in_flash=1;				
+					}			
 					break;
 				}		
 				

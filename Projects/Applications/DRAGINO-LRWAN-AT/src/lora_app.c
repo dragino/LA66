@@ -54,7 +54,7 @@
 #include "log.h"
 #include "tremo_system.h"
 #include "tremo_flash.h"
-
+#include "LoRaMacTest.h"
 /*
 product_id
 1:LTC2
@@ -65,6 +65,8 @@ product_id
 6:LDDS20
 7:RS485-LN
 */
+bool down_check;
+uint8_t decrypt_flag=0;
 char *band_string="";
 uint8_t product_id=0;
 uint8_t current_fre_band=0;//AS923=2
@@ -74,6 +76,11 @@ uint8_t product_id_read_in_flash=0;
 uint8_t fre_band_read_in_flash=0;//AS923=1 read in eeprom
 uint8_t firmware_ver_read_in_flash=0;//ver=1.0
 
+extern bool mac_response_flag;
+extern uint8_t symbtime1_value;
+extern uint8_t flag1;
+extern uint8_t symbtime2_value;
+extern uint8_t flag2;
 extern uint16_t REJOIN_TX_DUTYCYCLE;
 extern uint8_t response_level;
 
@@ -879,9 +886,7 @@ LoraState_t lora_config_otaa_get(void)
 void lora_config_duty_cycle_set(LoraState_t duty_cycle)
 {
   lora_config.duty_cycle = duty_cycle;
-	#if defined( REGION_EU868 )
   LoRaMacTestSetDutyCycleOn((duty_cycle == LORA_ENABLE) ? 1 : 0);
-	#endif
 }
 
 LoraState_t lora_config_duty_cycle_get(void)
@@ -1192,18 +1197,8 @@ void Flash_Store_Config(void)
 	store_config_in_flash[26]=mib.Param.NetID>>16 & 0xFF;
 	store_config_in_flash[27]=mib.Param.NetID>>8 & 0xFF;
 	store_config_in_flash[28]=mib.Param.NetID & 0xFF;
-
-//	store_config_in_flash[29]=APP_TX_DUTYCYCLE>>24 & 0xFF;
-//	store_config_in_flash[30]=APP_TX_DUTYCYCLE>>16 & 0xFF;
-//	store_config_in_flash[31]=APP_TX_DUTYCYCLE>>8 & 0xFF;
-//	store_config_in_flash[32]=APP_TX_DUTYCYCLE & 0xFF;
 	
 	store_config_in_flash[33]=lora_config.application_port;
-	
-//	store_config_in_flash[34]=password_get>>24 & 0xFF;
-//	store_config_in_flash[35]=password_get>>16 & 0xFF;
-//	store_config_in_flash[36]=password_get>>8 & 0xFF;
-//	store_config_in_flash[37]=password_get & 0xFF;
 
 	store_config_in_flash[38]=customize_config.freq1>>24 & 0xFF;
 	store_config_in_flash[39]=customize_config.freq1>>16 & 0xFF;
@@ -1246,6 +1241,14 @@ void Flash_Store_Config(void)
 	store_config_in_flash[66]=unconfirmed_uplink_change_to_confirmed_uplink_timeout>>8 & 0xFF;
 	store_config_in_flash[67]=unconfirmed_uplink_change_to_confirmed_uplink_timeout & 0xFF;
 //	store_config_in_flash[68]=pnackmd_switch;
+	store_config_in_flash[69]=symbtime1_value;													 
+	store_config_in_flash[70]=flag1;													 
+	store_config_in_flash[71]=symbtime2_value;												 
+	store_config_in_flash[72]=flag2;
+	
+	store_config_in_flash[73]=down_check;
+	store_config_in_flash[74]=decrypt_flag;
+	store_config_in_flash[75]=mac_response_flag;
 	
 	flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
 	if(flash_program_bytes(FLASH_USER_START_ADDR_CONFIG,store_config_in_flash,128)==ERRNO_FLASH_SEC_ERROR)
@@ -1289,10 +1292,8 @@ void Flash_Read_Config(void)
 	{
 		lora_config.duty_cycle=LORA_DISABLE;
 	}
-	
-  #if defined( REGION_EU868 )		
+		
 	LoRaMacTestSetDutyCycleOn((lora_config.duty_cycle == LORA_ENABLE) ? 1 : 0);
-	#endif
 		
 	mib.Type = MIB_PUBLIC_NETWORK;
 	mib.Param.EnablePublicNetwork=read_config_in_flash[8];
@@ -1352,8 +1353,6 @@ void Flash_Read_Config(void)
 	mib.Param.NetID=read_config_in_flash[25]<<24 | read_config_in_flash[26]<<16 | read_config_in_flash[27]<<8 | read_config_in_flash[28];
 	LoRaMacMibSetRequestConfirm( &mib );
 	
-//	APP_TX_DUTYCYCLE=read_config_in_flash[29]<<24 | read_config_in_flash[30]<<16 | read_config_in_flash[31]<<8 | read_config_in_flash[32];
-	
 	lora_config.application_port=read_config_in_flash[33];
 	
 //	password_get=read_config_in_flash[34]<<24 | read_config_in_flash[35]<<16 | read_config_in_flash[36]<<8 | read_config_in_flash[37];
@@ -1405,6 +1404,14 @@ void Flash_Read_Config(void)
 	unconfirmed_uplink_change_to_confirmed_uplink_timeout=read_config_in_flash[66]<<8 | read_config_in_flash[67];
 	
 //	pnackmd_switch=read_config_in_flash[68];
+	symbtime1_value=read_config_in_flash[69];													 
+	flag1=read_config_in_flash[70];														 
+	symbtime2_value=read_config_in_flash[71];												 
+	flag2=read_config_in_flash[72];	
+	
+	down_check=read_config_in_flash[73];	
+	decrypt_flag=read_config_in_flash[74];	
+	mac_response_flag=read_config_in_flash[75];	
 }
 
 static void new_firmware_update(void)

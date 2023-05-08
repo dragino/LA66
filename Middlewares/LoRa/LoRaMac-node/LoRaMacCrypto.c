@@ -26,6 +26,8 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 
 #include "LoRaMacCrypto.h"
 
+extern uint8_t decrypt_flag;
+
 /*!
  * CMAC/AES Message Integrity Code (MIC) Block B0 size
  */
@@ -107,6 +109,15 @@ void LoRaMacComputeMic( const uint8_t *buffer, uint16_t size, const uint8_t *key
 
 void LoRaMacPayloadEncrypt( const uint8_t *buffer, uint16_t size, const uint8_t *key, uint32_t address, uint8_t dir, uint32_t sequenceCounter, uint8_t *encBuffer )
 {
+	if(decrypt_flag==1)
+	{
+    for(uint8_t lens=0;lens<size;lens++)
+		{
+			encBuffer[lens]=buffer[lens];
+		}		
+	}
+	else
+	{	
     uint16_t i;
     uint8_t bufferIndex = 0;
     uint16_t ctr = 1;
@@ -148,6 +159,7 @@ void LoRaMacPayloadEncrypt( const uint8_t *buffer, uint16_t size, const uint8_t 
             encBuffer[bufferIndex + i] = buffer[bufferIndex + i] ^ sBlock[i];
         }
     }
+	}
 }
 
 void LoRaMacPayloadDecrypt( const uint8_t *buffer, uint16_t size, const uint8_t *key, uint32_t address, uint8_t dir, uint32_t sequenceCounter, uint8_t *decBuffer )

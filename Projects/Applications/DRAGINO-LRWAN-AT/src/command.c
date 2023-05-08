@@ -79,6 +79,9 @@ extern uint8_t response_level;
 
 extern bool FDR_status;
 
+extern bool down_check;
+extern bool mac_response_flag;
+extern uint8_t decrypt_flag;
 extern uint8_t currentLeapSecond;
 extern uint8_t time_synchronization_method;
 extern uint8_t time_synchronization_interval;
@@ -145,7 +148,9 @@ static int at_chs_func(int opt, int argc, char *argv[]);
 #if defined( REGION_US915 ) || defined( REGION_US915_HYBRID ) || defined ( REGION_AU915 ) || defined ( REGION_CN470 )
 static int at_che_func(int opt, int argc, char *argv[]);
 #endif
-
+static int at_rx1wto_func(int opt, int argc, char *argv[]);
+static int at_rx2wto_func(int opt, int argc, char *argv[]);
+static int at_decrypt_func(int opt, int argc, char *argv[]);
 static int at_sleep_func(int opt, int argc, char *argv[]);
 static int at_bat_func(int opt, int argc, char *argv[]);
 static int at_cfg_func(int opt, int argc, char *argv[]);
@@ -160,6 +165,8 @@ static int at_syncmod_func(int opt, int argc, char *argv[]);
 static int at_synctdc_func(int opt, int argc, char *argv[]);
 static int at_downlink_detect_func(int opt, int argc, char *argv[]);
 static int at_setmaxnbtrans_func(int opt, int argc, char *argv[]);
+static int at_disfcntcheck_func(int opt, int argc, char *argv[]);
+static int at_dismacans_func(int opt, int argc, char *argv[]);
 static int at_devicetimereq_func(int opt, int argc, char *argv[]);
 static int at_chsignaldetect_func(int opt, int argc, char *argv[]);
 
@@ -209,7 +216,9 @@ static at_cmd_t g_at_table[] = {
 		#if defined( REGION_US915 ) || defined( REGION_US915_HYBRID ) || defined ( REGION_AU915 ) || defined ( REGION_CN470 )
 		{AT_CHE, at_che_func},
 		#endif
-
+		{AT_RX1WTO, at_rx1wto_func},
+		{AT_RX2WTO, at_rx2wto_func},
+		{AT_DECRYPT, at_decrypt_func},
 		{AT_SLEEP, at_sleep_func},
 		{AT_BAT, at_bat_func},
 		{AT_CFG, at_cfg_func},
@@ -225,6 +234,8 @@ static at_cmd_t g_at_table[] = {
 		{AT_SYNCTDC, at_synctdc_func},
 		{AT_DDETECT, at_downlink_detect_func},
 		{AT_SETMAXNBTRANS, at_setmaxnbtrans_func},
+		{AT_DISFCNTCHECK, at_disfcntcheck_func},		
+		{AT_DISMACANS, at_dismacans_func},		
 		{AT_DEVICETIMEREQ,at_devicetimereq_func},
 		{AT_CHSIGNALDETECT,at_chsignaldetect_func},
 		#ifdef LA66_HARDWARE_TEST
@@ -2253,6 +2264,136 @@ static int at_che_func(int opt, int argc, char *argv[])
 }	
 #endif
 
+static int at_rx1wto_func(int opt, int argc, char *argv[])
+{
+    int ret = LWAN_PARAM_ERROR;
+    uint8_t value=0;
+    
+    switch(opt) {
+         case QUERY_CMD: {
+            ret = LWAN_SUCCESS;
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", symbtime1_value);
+
+					 break;
+        }
+        
+        case SET_CMD: {
+            if(argc < 1) break;
+            
+            value = strtol((const char *)argv[0], NULL, 0);
+						if ((value>=0)&&(value<=255))
+            {
+								flag1=1;
+								symbtime1_value=value;
+							  
+                ret = LWAN_SUCCESS;
+							  write_config_in_flash_status=1;
+							  atcmd[0] = '\0';
+            }
+            else
+            {
+                ret = LWAN_PARAM_ERROR;
+            }
+            break;
+        }
+								
+				case DESC_CMD: {
+					ret = LWAN_SUCCESS;
+					snprintf((char *)atcmd, ATCMD_SIZE, "Get or Set the number of symbols to detect and timeout from RXwindow1(0 to 255)\r\n");
+					break;
+				}
+        default: break;
+    }
+
+    return ret;	
+}
+
+static int at_rx2wto_func(int opt, int argc, char *argv[])
+{
+    int ret = LWAN_PARAM_ERROR;
+    uint8_t value=0;
+    
+    switch(opt) {
+         case QUERY_CMD: {
+            ret = LWAN_SUCCESS;
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", symbtime2_value);
+
+					 break;
+        }
+        
+        case SET_CMD: {
+            if(argc < 1) break;
+            
+            value = strtol((const char *)argv[0], NULL, 0);
+						if ((value>=0)&&(value<=255))
+            {
+								flag2=1;
+								symbtime2_value=value;
+							  
+                ret = LWAN_SUCCESS;
+							  write_config_in_flash_status=1;
+							  atcmd[0] = '\0';
+            }
+            else
+            {
+                ret = LWAN_PARAM_ERROR;
+            }
+            break;
+        }
+								
+				case DESC_CMD: {
+					ret = LWAN_SUCCESS;
+					snprintf((char *)atcmd, ATCMD_SIZE, "Get or Set the number of symbols to detect and timeout from RXwindow2(0 to 255)\r\n");
+					break;
+				}
+        default: break;
+    }
+
+    return ret;		
+}
+
+static int at_decrypt_func(int opt, int argc, char *argv[])
+{
+    int ret = LWAN_PARAM_ERROR;
+    uint8_t value=0;
+    
+    switch(opt) {
+         case QUERY_CMD: {
+            ret = LWAN_SUCCESS;
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", decrypt_flag);
+
+					 break;
+        }
+        
+        case SET_CMD: {
+            if(argc < 1) break;
+            
+            value = strtol((const char *)argv[0], NULL, 0);
+						if (value<=1)
+            {
+								decrypt_flag=value;
+                ret = LWAN_SUCCESS;
+							  write_config_in_flash_status=1;
+							  atcmd[0] = '\0';
+            }
+            else
+            {
+                ret = LWAN_PARAM_ERROR;
+            }
+            break;
+        }
+								
+				case DESC_CMD: {
+					ret = LWAN_SUCCESS;
+					snprintf((char *)atcmd, ATCMD_SIZE, "Get or Set the Decrypt the uplink payload(0:Disable,1:Enable)\r\n");
+					break;
+				}
+        default: break;
+    }
+
+    return ret;		
+}
+
 static int at_sleep_func(int opt, int argc, char *argv[])
 {
 	  int ret = LWAN_PARAM_ERROR; 
@@ -2830,6 +2971,90 @@ static int at_setmaxnbtrans_func(int opt, int argc, char *argv[])
     }
 
     return ret;
+}
+
+static int at_disfcntcheck_func(int opt, int argc, char *argv[])
+{
+    int ret = LWAN_PARAM_ERROR;
+    uint8_t value=0;
+    
+    switch(opt) {
+         case QUERY_CMD: {
+            ret = LWAN_SUCCESS;
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", down_check);
+
+					 break;
+        }
+        
+        case SET_CMD: {
+            if(argc < 1) break;
+            
+            value = strtol((const char *)argv[0], NULL, 0);
+						if(value<=1)
+            {
+								down_check=value;
+                ret = LWAN_SUCCESS;
+							  write_config_in_flash_status=1;
+							  atcmd[0] = '\0';
+            }
+            else
+            {
+                ret = LWAN_PARAM_ERROR;
+            }
+            break;
+        }
+								
+				case DESC_CMD: {
+					ret = LWAN_SUCCESS;
+					snprintf((char *)atcmd, ATCMD_SIZE, "Get or set the Downlink Frame Check(0:Enable,1:Disable)\r\n");
+					break;
+				}
+        default: break;
+    }
+
+    return ret;			
+}
+
+static int at_dismacans_func(int opt, int argc, char *argv[])
+{
+    int ret = LWAN_PARAM_ERROR;
+    uint8_t value=0;
+    
+    switch(opt) {
+         case QUERY_CMD: {
+            ret = LWAN_SUCCESS;
+            snprintf((char *)atcmd, ATCMD_SIZE, "%d\r\n", mac_response_flag);
+
+					 break;
+        }
+        
+        case SET_CMD: {
+            if(argc < 1) break;
+            
+            value = strtol((const char *)argv[0], NULL, 0);
+						if(value<=1)
+            {
+								mac_response_flag=value;
+                ret = LWAN_SUCCESS;
+							  write_config_in_flash_status=1;
+							  atcmd[0] = '\0';
+            }
+            else
+            {
+                ret = LWAN_PARAM_ERROR;
+            }
+            break;
+        }
+								
+				case DESC_CMD: {
+					ret = LWAN_SUCCESS;
+					snprintf((char *)atcmd, ATCMD_SIZE, "Get or set the MAC ANS switch(0:Enable,1:Disable)\r\n");
+					break;
+				}
+        default: break;
+    }
+
+    return ret;			
 }
 
 static int at_devicetimereq_func(int opt, int argc, char *argv[])
