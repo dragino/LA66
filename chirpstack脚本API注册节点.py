@@ -2,7 +2,15 @@
 import requests
 import json
 import time
-f =open("Keys_WTS10_20220511_EU868.txt","r")
+
+device_ip = '<IP>'
+device_profile_id = "<DEVICE-UUID>"
+application_id = 5
+app_key = "11111111111111111111111111111111"
+gen_app_key = "11111111111111111111111111111111"
+
+f = open("Keys_WTS10_20220511_EU868.txt","r")
+
 #跳过第一行
 readline1 = f.readline()
 count = 0
@@ -15,15 +23,15 @@ for i in readline1:
     dev = readline1[12:28]
     appkey = readline1[46:78]
     #API KEY
-    auth_token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGlfa2V5X2lkIjoiOGJmNjVmNzctMDkzYi00NTE3LWIzNTktMGI0NWVkNjM3M2Y5IiwiYXVkIjoiYXMiLCJpc3MiOiJhcyIsIm5iZiI6MTY1NDgzMDM5Nywic3ViIjoiYXBpX2tleSJ9.LPDOVb9AVMTR_AqOlqe_UwFtQSPsIOO9TSeJBGu4wjQ'    #POST headers
+    auth_token = '<TOKEN>'    #POST headers
     header = {'Authorization': 'Bearer ' + auth_token}
     #创建节点,chripstack与TTN不同先需要通过DEVEUI创建节点后，再给节点设置APPKEY
     data1 = {
       "device": {
-        "applicationID": "5",
+        "applicationID": application_id,
         "description": "test",
         "devEUI": dev,
-        "deviceProfileID": "06a341ed-3f2f-460e-97c1-02caf06c01c7",
+          "deviceProfileID": device_profile_id,
         "isDisabled": False,
         "name": dev,
         "referenceAltitude": 0,
@@ -35,9 +43,9 @@ for i in readline1:
     #给节点设置APPKEY，与WebUI不同使用API时APPKEY为NWKKEY
     data2 ={
       "deviceKeys": {
-        "appKey": "11111111111111111111111111111111",
+        "appKey": app_key,
         "devEUI": dev,
-        "genAppKey": "11111111111111111111111111111111",
+        "genAppKey": gen_app_key,
         "nwkKey": appkey
       }
     }
@@ -54,8 +62,8 @@ for i in readline1:
             url = "http://" + hostname + f":8080/api/devices/{dev}/keys"
             response = requests.post(url, data=data4, headers=header)
             return response
-    post_api_create_deveui('101.200.134.147')
+    post_api_create_deveui(device_ip)
     time.sleep(3)
-    post_api_create_appkey('101.200.134.147')
+    post_api_create_appkey(device_ip)
     print(f"注册第{count}台成功,DEVEUI={dev}")
 f.close()
