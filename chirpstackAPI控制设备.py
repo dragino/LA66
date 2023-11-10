@@ -14,7 +14,7 @@ def getdevices(ip):
         print(i['name'])
     #return data
 
-    print(getdevices(devices_ip))
+print(getdevices(devices_ip))
 
 def deletedevices(ip):
     url = "http://" + ip + f":8080/api/devices/{devtestid}"
