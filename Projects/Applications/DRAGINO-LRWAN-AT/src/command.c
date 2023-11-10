@@ -139,6 +139,7 @@ static int at_recv_func(int opt, int argc, char *argv[]);
 static int at_recvb_func(int opt, int argc, char *argv[]);
 static int at_ver_func(int opt, int argc, char *argv[]);
 static int at_cfm_func(int opt, int argc, char *argv[]);
+static int at_clinkcheck_func(int opt, int argc, char *argv[]);
 //static int at_cfs_func(int opt, int argc, char *argv[]);
 static int at_snr_func(int opt, int argc, char *argv[]);
 static int at_rssi_func(int opt, int argc, char *argv[]);
@@ -208,6 +209,7 @@ static at_cmd_t g_at_table[] = {
 		{AT_RECVB,at_recvb_func},
 		{AT_RECV,at_recv_func},
 		{AT_VER, at_ver_func},
+                {AT_CLINKCHECK, at_clinkcheck_func},
 		{AT_CFM, at_cfm_func},
 		{AT_SNR, at_snr_func},
 		{AT_RSSI, at_rssi_func},
@@ -3106,6 +3108,38 @@ static int at_devicetimereq_func(int opt, int argc, char *argv[])
 					snprintf((char *)atcmd, ATCMD_SIZE, "Device time req\r\n");
 					break;
 				}
+        default: break;
+    }
+
+    return ret;
+}
+
+static int at_clinkcheck_func(int opt, int argc, char *argv[])
+{
+    int ret = LWAN_ERROR;
+    uint8_t checkValue;
+
+    switch(opt) {
+        case DESC_CMD: {
+            ret = LWAN_SUCCESS;
+            snprintf((char *)atcmd, ATCMD_SIZE, "Set linkcheck mode (0-1)\r\n");
+            break;
+        }
+        case SET_CMD: {
+            if(argc < 1) break;
+            checkValue = strtol((const char *)argv[0], NULL, 0);
+            lora_config_linkcheck_set(checkValue);
+            ret = LWAN_SUCCESS;
+
+            if(checkValue==1) {
+              MlmeReq_t mlmeReq;
+              mlmeReq.Type = MLME_LINK_CHECK;
+              LoRaMacMlmeRequest( &mlmeReq );
+            }
+
+            snprintf((char *)atcmd, ATCMD_SIZE, "\r\nOK\r\n");
+            break;
+        }
         default: break;
     }
 

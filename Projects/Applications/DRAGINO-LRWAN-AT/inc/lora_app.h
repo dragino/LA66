@@ -320,6 +320,21 @@ void lora_config_tx_datarate_set(int8_t TxDataRate);
  */ 
 int8_t lora_config_tx_datarate_get(void );
 
+
+/**
+ * @brief  get linkcheck
+ * @param  None
+ * @retval linkcheck mode
+ */
+uint8_t lora_config_linkcheck_get(void);
+
+/**
+ * @brief  set linkcheck
+ * @param  linkcheck mode
+ * @retval None
+ */
+void lora_config_linkcheck_set(uint8_t LinkCheck);
+
 /**
   * @brief  set 
   * @param  
