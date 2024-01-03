@@ -28,9 +28,8 @@ extern "C" {
 #define RCC_FREQ_32M      ((uint32_t)32000000)
 #define RCC_FREQ_30M      ((uint32_t)30000000)	
 #define RCC_FREQ_24M      ((uint32_t)24000000)		
-#define RCC_FREQ_4M       ((uint32_t)4000000)	
-#define RCC_FREQ_32768    ((uint32_t)32768)	
-#define RCC_FREQ_32000    ((uint32_t)32000)
+#define RCC_FREQ_4M       ((uint32_t)3600000)
+#define RCC_FREQ_32768    ((uint32_t)32768)
 
 #define RCC_WAIT() \
     do {           \

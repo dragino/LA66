@@ -77,10 +77,12 @@ void  FLASH_erase_all_sensor_data_storage(uint32_t page_address)
 {
   for(uint32_t addr=FLASH_SENSOR_DATA_START_ADDR;addr<FLASH_SENSOR_DATA_END_ADDR;)
 	{
+		__disable_irq();
 		if(flash_erase_page(addr)==ERRNO_FLASH_SEC_ERROR)
 		{
 			LOG_PRINTF(LL_DEBUG,"erase all sensor data storage error\r\n");
 		}
+		__enable_irq();
 		delay_ms(100);
 		addr=addr+0x1000;
 	}
@@ -88,10 +90,12 @@ void  FLASH_erase_all_sensor_data_storage(uint32_t page_address)
 
 void  FLASH_program(uint32_t add, uint8_t *data, uint8_t count)
 {
+	__disable_irq();
 	if(flash_program_bytes(add,data,count)==ERRNO_FLASH_SEC_ERROR)
 	{
 		LOG_PRINTF(LL_DEBUG,"write config error\r\n");
 	}
+	__enable_irq();
 }
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

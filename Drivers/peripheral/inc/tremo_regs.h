@@ -464,8 +464,8 @@ typedef struct __RTC {
     __IO uint32_t CALENDAR_H;       /*!< time year/month/date*/
     __IO uint32_t CYC_MAX;          /*!< cyc max value*/
     __IO uint32_t SR;               /*!< status register*/
-    __I uint32_t SYN_DATA;          /*!< syncronization time hour/minute/second*/
-    __I uint32_t SYN_DATA_H;        /*!< syncronization time year/month/date*/
+    __I uint32_t ASYN_DATA;         /*!< asynchronization time hour/minute/second*/
+    __I uint32_t ASYN_DATA_H;       /*!< asynchronization time year/month/date*/
     __IO uint32_t CR1;              /*!< control register 1*/
     __IO uint32_t SR1;              /*!< status register 1*/
     __IO uint32_t CR2;              /*!< control register 2*/
@@ -524,11 +524,11 @@ typedef struct {
 
 #define UART_CR_UART_EN ((uint32_t)0x00000001)
 
-#define UART_CR_UART_MODE      ((uint32_t)0x00000030)
+#define UART_CR_UART_MODE      ((uint32_t)0x00000300)
 #define UART_CR_UART_MODE_NONE ((uint32_t)0x00000000)
-#define UART_CR_UART_MODE_RX   ((uint32_t)0x00000020)
-#define UART_CR_UART_MODE_TX   ((uint32_t)0x00000010)
-#define UART_CR_UART_MODE_TXRX ((uint32_t)0x00000030)
+#define UART_CR_UART_MODE_RX   ((uint32_t)0x00000200)
+#define UART_CR_UART_MODE_TX   ((uint32_t)0x00000100)
+#define UART_CR_UART_MODE_TXRX ((uint32_t)0x00000300)
 
 #define UART_CR_FLOW_CTRL         ((uint32_t)0x0000C000)
 #define UART_CR_FLOW_CTRL_NONE    ((uint32_t)0x00000000)

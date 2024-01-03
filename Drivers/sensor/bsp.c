@@ -78,6 +78,58 @@ void BSP_sensor_Read( sensor_t *sensor_data )
 
 void  BSP_sensor_Init( void  )
 {
+  gpio_config_stop3_wakeup(GPIOC, GPIO_PIN_8,false,GPIO_LEVEL_LOW);
+  gpio_clear_interrupt(GPIOC, GPIO_PIN_8);
+  NVIC_DisableIRQ(GPIO_IRQn);
+
+  rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOA, true);
+//  gpio_set_iomux(GPIOA, GPIO_PIN_6, 0);
+//	gpio_set_iomux(GPIOA, GPIO_PIN_7, 0);
+//	gpio_init(GPIOA, GPIO_PIN_6, GPIO_MODE_ANALOG);
+//	gpio_init(GPIOA, GPIO_PIN_7, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_1, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_0, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_3, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_2, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_14, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_15, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_9, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_4, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_5, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_8, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_11, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_12, GPIO_MODE_ANALOG);
+	gpio_init(GPIOA, GPIO_PIN_13, GPIO_MODE_ANALOG);
+	
+	rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOB, true);
+	gpio_init(GPIOB, GPIO_PIN_7, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_8, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_9, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_10, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_11, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_12, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_13, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_14, GPIO_MODE_ANALOG);
+	gpio_init(GPIOB, GPIO_PIN_15, GPIO_MODE_ANALOG);
+	
+	rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOC, true);
+	gpio_init(GPIOC, GPIO_PIN_1, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_0, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_3, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_4, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_5, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_8, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_9, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_12, GPIO_MODE_ANALOG);
+	gpio_init(GPIOC, GPIO_PIN_13, GPIO_MODE_ANALOG);
+	
+	rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOD, true);
+	gpio_init(GPIOD, GPIO_PIN_10, GPIO_MODE_ANALOG);
+	gpio_init(GPIOD, GPIO_PIN_14, GPIO_MODE_ANALOG);
+	
+	rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOC, true);
+	gpio_init(GPIOC, GPIO_PIN_8, GPIO_MODE_OUTPUT_PP_LOW);
+	
 	rcc_enable_peripheral_clk(RCC_PERIPHERAL_GPIOB, true);
 	
 	#if defined( ACCUHEALTH_LA66 )

@@ -217,8 +217,8 @@ void SysTimeSet( SysTime_t sysTime )
 	  SysTime_t calendarTime = { .Seconds = 0, .SubSeconds = 0 };
 		TimerTime_t cur_time = RtcGetTimerValue( );
 		
-		calendarTime.Seconds=(uint32_t)cur_time/1000;
-		calendarTime.SubSeconds=(uint16_t)cur_time%1000;
+		calendarTime.Seconds=(uint32_t)(cur_time/1000);
+		calendarTime.SubSeconds=(uint16_t)(cur_time%1000);
 		
 		// sysTime is epoch
     DeltaTime = SysTimeSub( sysTime, calendarTime );
@@ -246,8 +246,8 @@ SysTime_t SysTimeGet( void )
 		
 		TimerTime_t cur_time = RtcGetTimerValue( );
 		
-		calendarTime.Seconds=(uint32_t)cur_time/1000;
-		calendarTime.SubSeconds=(uint16_t)cur_time%1000;
+		calendarTime.Seconds=(uint32_t)(cur_time/1000);
+		calendarTime.SubSeconds=(uint16_t)(cur_time%1000);
 		
 		DeltaTime.Seconds=(*((uint8_t *)(0x2000F000)))<<24|(*((uint8_t *)(0x2000F001)))<<16|(*((uint8_t *)(0x2000F002)))<<8|(*((uint8_t *)(0x2000F003)));
 		DeltaTime.SubSeconds=(*((uint8_t *)(0x2000F004)))<<8|(*((uint8_t *)(0x2000F005)));

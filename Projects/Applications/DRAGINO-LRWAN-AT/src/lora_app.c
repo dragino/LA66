@@ -55,6 +55,8 @@
 #include "tremo_system.h"
 #include "tremo_flash.h"
 #include "LoRaMacTest.h"
+#include "tremo_delay.h"
+
 /*
 product_id
 1:LTC2
@@ -431,7 +433,7 @@ void LORA_Init (LoRaMainCallback_t *callbacks, LoRaParam_t* LoRaParam )
 	LOG_PRINTF(LL_DEBUG,"Frequency Band: ");
 	#elif defined( USB_LORAWAN_ADAPTER_LBT )
 	LOG_PRINTF(LL_DEBUG,"\n\rDragino USB LoRaWAN adapter LBT\n\r");
-	LOG_PRINTF(LL_DEBUG,"Image Version: v1.0\n\r");
+	LOG_PRINTF(LL_DEBUG,"Image Version: v1.2\n\r");
 	#else
 	LOG_PRINTF(LL_DEBUG,"\n\rDragino LA66 Device\n\r");
 	LOG_PRINTF(LL_DEBUG,"Image Version: "AT_VERSION_STRING"\n\r");
@@ -886,7 +888,9 @@ LoraState_t lora_config_otaa_get(void)
 void lora_config_duty_cycle_set(LoraState_t duty_cycle)
 {
   lora_config.duty_cycle = duty_cycle;
+	#if defined( REGION_EU868 )
   LoRaMacTestSetDutyCycleOn((duty_cycle == LORA_ENABLE) ? 1 : 0);
+	#endif
 }
 
 LoraState_t lora_config_duty_cycle_get(void)
@@ -1042,11 +1046,14 @@ void Flash_store_key(void)
       store_key_in_flash[i]=lora_config.AppSKey[j];
     }        
 		
+		__disable_irq();
 		flash_erase_page(FLASH_USER_START_ADDR_KEY);
+		delay_ms(5);
 		if(flash_program_bytes(FLASH_USER_START_ADDR_KEY,store_key_in_flash,128)==ERRNO_FLASH_SEC_ERROR)
 		{
 			LOG_PRINTF(LL_DEBUG,"write key error\r\n");
 		}
+		__enable_irq();
 }
 
 void Flash_read_key(void)
@@ -1250,11 +1257,14 @@ void Flash_Store_Config(void)
 	store_config_in_flash[74]=decrypt_flag;
 	store_config_in_flash[75]=mac_response_flag;
 	
+	__disable_irq();
 	flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
+	delay_ms(5);
 	if(flash_program_bytes(FLASH_USER_START_ADDR_CONFIG,store_config_in_flash,128)==ERRNO_FLASH_SEC_ERROR)
 	{
 		LOG_PRINTF(LL_DEBUG,"write config error\r\n");
 	}
+	__enable_irq();
 }
 	
 void Flash_Read_Config(void)
@@ -1292,8 +1302,10 @@ void Flash_Read_Config(void)
 	{
 		lora_config.duty_cycle=LORA_DISABLE;
 	}
-		
+	
+  #if defined( REGION_EU868 )		
 	LoRaMacTestSetDutyCycleOn((lora_config.duty_cycle == LORA_ENABLE) ? 1 : 0);
+	#endif
 		
 	mib.Type = MIB_PUBLIC_NETWORK;
 	mib.Param.EnablePublicNetwork=read_config_in_flash[8];
@@ -1428,11 +1440,14 @@ static void new_firmware_update(void)
 			status[0]=0x12;
 	
 			while(print_isdone()==0);
+			__disable_irq();
 			flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
+			delay_ms(5);
 			if(flash_program_bytes(FLASH_USER_START_ADDR_CONFIG,status,128)==ERRNO_FLASH_SEC_ERROR)
 			{
 				LOG_PRINTF(LL_DEBUG,"write config error\r\n");
 			}
+			__enable_irq();
 		}
 		else if((current_firmware_ver!=firmware_ver_read_in_flash))
 		{
@@ -1440,12 +1455,15 @@ static void new_firmware_update(void)
 			status[0]=0x13;
 			
 			while(print_isdone()==0);
+			__disable_irq();
 			//add new configuration
 			flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
+			delay_ms(5);
 			if(flash_program_bytes(FLASH_USER_START_ADDR_CONFIG,status,128)==ERRNO_FLASH_SEC_ERROR)
 			{
 				LOG_PRINTF(LL_DEBUG,"write config error\r\n");
 			}
+			__enable_irq();
 		}
   }
 }

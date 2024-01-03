@@ -436,12 +436,14 @@ static int at_fdr_func(int opt, int argc, char *argv[])
           ret = LWAN_SUCCESS;   
 					uint8_t status[128]={0};
 					memset(status, 0x00, 128);
-					
+					__disable_irq();
 					flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
+					delay_ms(5);
 					if(flash_program_bytes(FLASH_USER_START_ADDR_CONFIG,status,128)==ERRNO_FLASH_SEC_ERROR)
 					{
 						snprintf((char *)atcmd, ATCMD_SIZE, "FDR error\r\n");
 					}
+					__enable_irq();
 		
 					delay_ms(100);
           system_reset();
@@ -2713,7 +2715,7 @@ static int at_timestamp_func(int opt, int argc, char *argv[])
             uint32_t timestamp;
             SysTime_t sysTime = { 0 };
             
-            timestamp=strtol((const char *)argv[0], NULL, 0);
+            timestamp=strtoul((const char *)argv[0], NULL, 0);
             
             if (timestamp > 1640044800) {              
 							sysTime.Seconds=timestamp;

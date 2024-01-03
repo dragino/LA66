@@ -345,14 +345,14 @@ PhyParam_t RegionAS923GetPhyParam( GetPhyParams_t* getPhy )
         }
         case PHY_DEF_DOWNLINK_DWELL_TIME:
         {
-					  if(dwelltime==1)
-						{
-            phyParam.Value = AS923_DEFAULT_DOWNLINK_DWELL_TIME;
-						}
-						else	
-						{							
+//					  if(dwelltime==1)
+//						{
+//            phyParam.Value = AS923_DEFAULT_DOWNLINK_DWELL_TIME;
+//						}
+//						else	
+//						{							
 							phyParam.Value = 0;
-						}
+//						}
             break;
         }
         case PHY_DEF_MAX_EIRP:

@@ -664,6 +664,8 @@ static void OnRadioTxDone( void )
     TimerTime_t curTime = TimerGetCurrentTime( );
     LastTxdoneTime=SysTimeGet();
 	
+	  iwdg_reload();
+	
     if( LoRaMacDeviceClass != CLASS_C )
     {
         Radio.Sleep( );
@@ -1336,12 +1338,18 @@ static void OnMacStateCheckTimerEvent( void )
                 ( MlmeConfirm.Status == LORAMAC_EVENT_INFO_STATUS_TX_TIMEOUT ) )
             {
                 // Stop transmit cycle due to tx timeout.
-                LoRaMacState &= ~LORAMAC_TX_RUNNING;
+//                LoRaMacState &= ~LORAMAC_TX_RUNNING;
                 MacCommandsBufferIndex = 0;
                 McpsConfirm.NbRetries = AckTimeoutRetriesCounter;
                 McpsConfirm.AckReceived = false;
                 McpsConfirm.TxTimeOnAir = 0;
-                txTimeout = true;
+//                txTimeout = true;
+							
+								if(rejoin_keep_status == 0)
+								{
+									LoRaMacState &= ~LORAMAC_TX_RUNNING;
+									txTimeout = true;
+								}
             }
         }
 
@@ -2192,9 +2200,10 @@ static void ProcessMacCommands( uint8_t *payload, uint8_t macIndex, uint8_t comm
 										// Compensate time difference between Tx Done time and now
 										sysTimeCurrent = SysTimeGet( );
 										sysTime = SysTimeAdd( sysTimeCurrent, SysTimeSub( sysTime, LastTxdoneTime ) );
-                    UTC_Request=0;
+                    
 										if(sysTime.Seconds>1611878400)//20210129 00:00:00
 										{
+											UTC_Request=0;
 											LOG_PRINTF(LL_DEBUG,"Sync time ok\r");
 											// Apply the new system time.
 											SysTimeSet( sysTime );
@@ -2640,8 +2649,7 @@ LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
     txConfig.MaxEirp = LoRaMacParams.MaxEirp;
     txConfig.AntennaGain = LoRaMacParams.AntennaGain;
     txConfig.PktLen = LoRaMacBufferPktLen;
-
-    iwdg_reload();	
+	
 		if(debug_flags==1)
 		{	
     TimerTime_t ts = TimerGetCurrentTime(); 

@@ -307,7 +307,7 @@ void board_init()
 				*((unsigned int *)(0x2000F004)) =0x00;
 				*((unsigned int *)(0x2000F005)) =0x00;
 			
-			  for(int i=0;i<3328;i++)
+			  for(uint16_t i=0;i<3328;i++)
 				{
 					*((unsigned int *)(SRAM_SENSOR_DATA_STORE_ACK_START_ADDR+i)) =0xEE;
 				}
@@ -349,6 +349,11 @@ int main(void)
 		BSP_sensor_Init();
 		
 		StartIWDGRefresh(TX_ON_EVENT);		
+		
+		if(debug_flags==1)
+		{
+			LOG_PRINTF(LL_DEBUG,"dragino_6601_ota\r\n");
+		}
 		
 		/* Configure the Lora Stack*/
 		LORA_Init( &LoRaMainCallbacks, &LoRaParamInit);
@@ -669,11 +674,14 @@ static void LORA_RxData( lora_AppData_t *AppData )
 							memset(status, 0x00, 128);
 
 							status[0]=0x12;
+							__disable_irq();
 							flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
+							delay_ms(5);
 							if(flash_program_bytes(FLASH_USER_START_ADDR_CONFIG,status,128)==ERRNO_FLASH_SEC_ERROR)
 							{
 								LOG_PRINTF(LL_DEBUG,"write config error\r\n");
 							}
+							__enable_irq();
 					
 							atz_flags=1;													
 						}

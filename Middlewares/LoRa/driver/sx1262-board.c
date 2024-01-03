@@ -22,12 +22,14 @@
  */
 #include <stdlib.h>
 #include "delay.h"
+#include "tremo_rcc.h"
 #include "tremo_gpio.h"
 #include "tremo_regs.h"
 #include "tremo_delay.h"
 #include "radio.h"
 #include "lora_config.h"
 #include "sx126x-board.h"
+#include "tremo_rcc.h"
 
 #define BOARD_TCXO_WAKEUP_TIME 5
 uint8_t gPaOptSetting = 0;
@@ -61,7 +63,12 @@ uint16_t SpiInOut( uint16_t outData )
 
 void SX126xLoracInit()
 {
-	LORAC->CR0 = 0x00000200;
+    rcc_enable_peripheral_clk(RCC_PERIPHERAL_LORA, false);
+    rcc_rst_peripheral(RCC_PERIPHERAL_LORA, true);
+    rcc_rst_peripheral(RCC_PERIPHERAL_LORA, false);
+    rcc_enable_peripheral_clk(RCC_PERIPHERAL_LORA, true);
+
+    LORAC->CR0 = 0x00000200;
 
     LORAC->SSP_CR0 = 0x07;
     LORAC->SSP_CPSR = 0x02;
@@ -72,7 +79,7 @@ void SX126xLoracInit()
     {
         delay_us(20);
         LORAC->NSS_CR = 0;
-        delay_us(20);
+        delay_us(110);
         LORAC->NSS_CR = 1;
     }
 
@@ -95,8 +102,10 @@ uint32_t SX126xGetBoardTcxoWakeupTime( void )
 
 void SX126xReset( void )
 {
-    LORAC->CR1 |= 1<<5;  //nreset
-    LORAC->CR1 &= ~(1<<7); //por
+    LORAC->CR1 &= ~(1<<5);  //nreset
+    delay_us(100);
+    LORAC->CR1 |= 1<<5;    //nreset release
+    LORAC->CR1 &= ~(1<<7); //por release
     LORAC->CR0 |= 1<<5; //irq0
     LORAC->CR1 |= 0x1;  //tcxo
     
@@ -114,7 +123,7 @@ void SX126xWakeup( void )
     BoardDisableIrq( );
 
     LORAC->NSS_CR = 0;
-    delay_us(10);
+    delay_us(20);
 
     SpiInOut( RADIO_GET_STATUS );
     SpiInOut( 0x00 );
