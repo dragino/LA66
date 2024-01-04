@@ -55,6 +55,7 @@
 #define AT_RECV       "+RECV"
 #define AT_VER        "+VER"
 #define AT_CFM        "+CFM"
+#define AT_CLINKCHECK "+CLINKCHECK"
 #define AT_CFS        "+CFS"
 #define AT_SNR        "+SNR"
 #define AT_RSSI       "+RSSI"
