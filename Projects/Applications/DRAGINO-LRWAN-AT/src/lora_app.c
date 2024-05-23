@@ -136,6 +136,7 @@ uint8_t lora_packet_send_complete_status=0;
    LoraConfirm_t ReqAck;      /*< ENABLE if acknowledge is requested */
    McpsConfirm_t *McpsConfirm;  /*< pointer to the confirm structure */
    int8_t TxDatarate;
+   uint8_t linkCheck;
  } lora_configuration_t;
  
 /**
@@ -191,7 +192,8 @@ static lora_configuration_t lora_config =
   .Snr = 0,
   .ReqAck = LORAWAN_UNCONFIRMED_MSG,
   .McpsConfirm = NULL,
-  .TxDatarate = 0
+  .TxDatarate = 0,
+  .linkCheck = 0
 };
 
 
@@ -1010,6 +1012,14 @@ LoraState_t lora_config_isack_get(void)
   }
 }
 
+void lora_config_linkcheck_set(uint8_t LinkCheck)
+{
+  lora_config.linkCheck = LinkCheck;
+}
+
+uint8_t lora_config_linkcheck_get() { return lora_config.linkCheck; }
+
+
 void Flash_store_key(void)
 {
 	  uint8_t store_key_in_flash[128];
@@ -1256,6 +1266,8 @@ void Flash_Store_Config(void)
 	store_config_in_flash[73]=down_check;
 	store_config_in_flash[74]=decrypt_flag;
 	store_config_in_flash[75]=mac_response_flag;
+
+        store_config_in_flash[76]=lora_config.linkCheck;
 	
 	__disable_irq();
 	flash_erase_page(FLASH_USER_START_ADDR_CONFIG);
@@ -1423,7 +1435,8 @@ void Flash_Read_Config(void)
 	
 	down_check=read_config_in_flash[73];	
 	decrypt_flag=read_config_in_flash[74];	
-	mac_response_flag=read_config_in_flash[75];	
+	mac_response_flag=read_config_in_flash[75];
+	lora_config.linkCheck = read_config_in_flash[76];
 }
 
 static void new_firmware_update(void)
